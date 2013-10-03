@@ -2,42 +2,43 @@
 // #include "boost/python/extract.hpp"
 #include <iostream>
 #include <stdlib.h>
-#include <time.h>
-#include <stdio.h>
+#include <iostream>
 #include "rlutil/rlutil.h"
 
 // using namespace boost::python;
 using namespace std;
 
 // Class contains methods to interface with Python
+template<class elemT,class nT>
 class axpy {
-  long int MemElem;
-  long int maxIter;
-  float *X;
-  float *Y;
-  float alpha;
+  nT MemElem;
+  nT maxIter;
+  elemT *X;
+  elemT *Y;
+  elemT alpha;
   double allocate_time_sec;
   double deallocate_time_sec;
   double bench_time_sec;
+  nT i;
 
 	// Demonstrate extracting a derived object type that is built-in to Boost
 	public: 
-    void MallocMemory(long int N, long int iter, float a) {
+    void MallocMemory( nT N, nT iter, elemT a) {
       rlutil::setColor(15);
       cout << "Alojando memoria ..." << endl;
       clock_t start = clock();
-      alpha = a;
+      alpha   = a;
       MemElem = N;
       maxIter = iter;
-      X = (float*)malloc ( MemElem*sizeof(float) );
-      Y = (float*)malloc ( MemElem*sizeof(float) );
+      X = (elemT*)malloc ( MemElem*sizeof(elemT) );
+      Y = (elemT*)malloc ( MemElem*sizeof(elemT) );
       clock_t end = clock();
-      allocate_time_sec = (end - start) / CLOCKS_PER_SEC / 60;
+      allocate_time_sec = (double)(end - start) / CLOCKS_PER_SEC;
       cout << "Alojando memoria exitosamente..." << endl;
     }
 
     void fill(){
-      for (long int i = 0; i < MemElem; i++) {
+      for ( i = 0; i < MemElem; i++) {
         X[i] = 1.0f;
         Y[i] = 2.0f;
       }
@@ -46,17 +47,20 @@ class axpy {
     void axpy_bench(){
       cout << "Corriendo benchmark..." << endl;
       clock_t start = clock();
-      for(long int iter = 0; iter < maxIter; iter++ )
-        for (long int i=0; i<MemElem;i++){
+      for(nT iter = 0; iter < maxIter; iter++ )
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for ( i=0; i<MemElem;i++){
           Y[i] = alpha*X[i] + Y[i];
         }
       clock_t end = clock();
-      bench_time_sec = (end - start) / CLOCKS_PER_SEC / 60;
-      cout << "Corriendo benchmark exitosamente...." << endl;
+      bench_time_sec = (double)(end - start) / CLOCKS_PER_SEC;
+      cout << "Corriendo benchmark exitosamente...." <<  endl;
     }
 
     void check(){
-      for (long int i = 0; i < MemElem; i++){
+      for ( i = 0; i < MemElem; i++){
         double test = (2.0f * maxIter)/Y[i];
         if( test < 0.0000001){
           rlutil::setColor(12);
@@ -67,7 +71,7 @@ class axpy {
     }
 
     void print_vector(){
-      for (long int i = 0; i < MemElem; i++)
+      for ( i = 0; i < MemElem; i++)
             cout << "pos: " << i << " Y: " << Y[i] << " X: " << X[i]<< endl; 
     }
 
@@ -77,16 +81,16 @@ class axpy {
       free(X);
       free(Y);
       clock_t end = clock();
-      deallocate_time_sec = (end - start) / CLOCKS_PER_SEC / 60;
-      cout << "Desalojando memoria exitosamente..." << endl;
+      deallocate_time_sec = (double)(end - start) / CLOCKS_PER_SEC;
+      cout << "Desalojando memoria exitosamente... " << endl;
     }
 
     void resultados(){
       rlutil::setColor(10);
-      cout.precision(15);
-      cout << "Alojamiento (time,bytes): " << allocate_time_sec << "," << MemElem*sizeof(float) << endl;
-      cout << "Desalojamiento (time,bytes): " << deallocate_time_sec << "," << MemElem*sizeof(float) << endl;
-      cout << "AXPY benchmark (time, elementos,iteraciones): " << bench_time_sec << "," << MemElem << "," << maxIter << endl;
+      cout.precision(4);
+      cout << "Alojamiento (time[min],bytes): \t\t\t" << allocate_time_sec << "," << MemElem*sizeof(float) << endl;
+      cout << "Desalojamiento (time[min],bytes): \t\t" << deallocate_time_sec << "," << MemElem*sizeof(float) << endl;
+      cout << "AXPY benchmark (time[min], elementos,iteraciones): " << bench_time_sec << "," << MemElem << "," << maxIter << endl;
     }
 };
 
@@ -97,3 +101,4 @@ class axpy {
 // 		.def("axpy_bench", &axpy::axpy_bench)
 // 	;	
 // }
+  

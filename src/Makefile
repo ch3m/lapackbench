@@ -1,24 +1,32 @@
-#Name of the file(s) we're compiling
-
+MKDIR_P = mkdir -p
 TARGET = lapack_bench
 
-# location of the Python header files
+# all: variables directories program
+all: variables program
 
-PYTHON = /usr/include/python2.6
+variables:
+ifeq ($(ARCH),gnu)
+CXX := g++
+SPEC_FLAGS := -O3
+else ifeq ($(ARCH),gnu_openmp)
+CXX := g++
+SPEC_FLAGS := -O3 -fopenmp
+else
+ARCH := "none"
+CXX := g++
+SPEC_FLAGS := 
+endif
+#GEN_FLAGS := -vec-report3 
+		
+# directories: bin
 
-# location of the Boost Python include files and library
-#BOOST = /home/ch3m/Tools/boost/boost-install
-BOOST_INC = $(BOOST)/include
-BOOST_LIB = $(BOOST)/boost-install/lib
+# bin:
+# 	${MKDIR_P} bin
 
-$(TARGET).so: $(TARGET).o
-	icpc -openmp -O3 -shared -lmkl_rt -L$(BOOST_LIB) -lboost_python  \
-	-L/usr/lib64/python2.6/config -lpython2.6 \
-  $(TARGET).o -o lapack_bench.so
-
-$(TARGET).o: $(TARGET).cc
-	icpc -openmp -O3 -vec-report2 -fPIC -I$(PYTHON) -I$(BOOST_INC) -c $(TARGET).cc
+program:
+	@echo "arquitectura: $(ARCH)"
+	@echo "Compilador: ${CXX}"
+	${CXX} ${SPEC_FLAGS} ${GEN_FLAGS} ${TARGET}.cc -o ${TARGET}
 
 clean:
-	rm -f *.o *.dll *.a *~ core
-
+	rm -rf ${TARGET}
