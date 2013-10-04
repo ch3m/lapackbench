@@ -7,10 +7,13 @@ all: variables program
 variables:
 ifeq ($(ARCH),gnu)
 CXX := g++
-SPEC_FLAGS := -O3
+SPEC_FLAGS := -O3  -ftree-vectorizer-verbose=2
 else ifeq ($(ARCH),gnu_openmp)
 CXX := g++
-SPEC_FLAGS := -O3 -fopenmp
+SPEC_FLAGS := -O3 -fopenmp -ftree-vectorizer-verbose=7 -Wall
+else ifeq ($(ARCH),intel)
+CXX := icpc
+SPEC_FLAGS := -O3 -fopenmp -vec-report=1 -restrict
 else
 ARCH := "none"
 CXX := g++

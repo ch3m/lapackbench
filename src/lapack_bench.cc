@@ -2,7 +2,9 @@
 int main(){
   axpy<double,long int> axpy_bench;
 
-  axpy_bench.MallocMemory(4294967296,100,1.0);
+  axpy_bench.set_maxIter(100);
+  axpy_bench.set_data_gb(20);
+  axpy_bench.MallocMemory();
   axpy_bench.fill();
   // axpy_bench.print_vector();  
   axpy_bench.axpy_bench();
